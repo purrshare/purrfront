@@ -11,4 +11,4 @@ def info():
     return render_template('index.html', guestMode=guestMode, instanceBackendURL=instanceBackendURL, instanceName=instanceName)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
