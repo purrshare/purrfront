@@ -36,10 +36,10 @@ Copyright (C) 2025  PurrShare
     </div>
     <script>
         // https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined
-        async function copyToClipboard(textToCopy) {
+        function copyToClipboard(textToCopy) {
             // Navigator clipboard api needs a secure context (https)
             if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(textToCopy);
+                navigator.clipboard.writeText(textToCopy);
             } else {
                 // Use the 'out of viewport hidden text area' trick
                 const textArea = document.createElement("textarea");
@@ -62,37 +62,39 @@ Copyright (C) 2025  PurrShare
             }
         }
 
-        document.getElementById('fileInput').addEventListener('change', async function (event) {
+        document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
+            var url;
             if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                try {
-                    const response = await fetch('{{ instanceBackendURL }}' + file.name, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: formData,
-                        headers: {
-                            'Content-Type': 'application/octet-stream'
-                        }
-                    });
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '{{ instanceBackendURL }}' + file.name, true);
 
-                    if (response.ok) {
-                        const responseData = await response.text();
-                        const url = "{{ instanceBackendURL }}" + responseData + "/n/" + file.name;
+                xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        url = "{{ instanceBackendURL }}" + xhr.responseText + "/n/" + file.name;
+                        alert('Upload successful:\n' + "{{ instanceBackendURL }}" + url + "\nTrying to copy to clipboard...");
                         try {
-                            await copyToClipboard(url);
-                        } catch (error) {
+                            copyToClipboard(url);
+                            alert("Copied to clipboard!")
+                        } catch(error) {
                             console.error(error);
                         }
-                        alert('Upload successful:\n' + url + "\nCopied to clipboard!");
+
                     } else {
-                        alert('Upload failed: ' + response.statusText);
+                        alert('Upload failed: ' + xhr.statusText);
                     }
-                } catch (error) {
+                };
+
+                xhr.onerror = function() {
                     alert('Upload failed: Network error');
-                }
+                };
+
+                xhr.send(file);
             } else {
                 alert('No file selected');
             }
