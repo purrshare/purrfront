@@ -1,6 +1,4 @@
 from flask import Flask, render_template
-# use none for hidden or block for show
-guestMode = "none"
 instanceBackendURL = "http://backend.dateien.link:8080/v1/files/"
 instanceName = "PurrShare"
 
