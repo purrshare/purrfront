@@ -35,33 +35,6 @@ Copyright (C) 2025  PurrShare
                     data-svelte-h="svelte-qskh6z">Log in for the full experience</a></p></div>
     </div>
     <script>
-        // https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined
-        function copyToClipboard(textToCopy) {
-            // Navigator clipboard api needs a secure context (https)
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(textToCopy);
-            } else {
-                // Use the 'out of viewport hidden text area' trick
-                const textArea = document.createElement("textarea");
-                textArea.value = textToCopy;
-
-                // Move textarea out of the viewport so it's not visible
-                textArea.style.position = "absolute";
-                textArea.style.left = "-999999px";
-
-                document.body.prepend(textArea);
-                textArea.select();
-
-                try {
-                    document.execCommand('copy');
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    textArea.remove();
-                }
-            }
-        }
-
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             var url;
@@ -77,14 +50,7 @@ Copyright (C) 2025  PurrShare
                 xhr.onload = function() {
                     if (xhr.status === 200) {
                         url = "{{ instanceBackendURL }}" + xhr.responseText + "/n/" + file.name;
-                        alert('Upload successful:\n' + "{{ instanceBackendURL }}" + url + "\nTrying to copy to clipboard...");
-                        try {
-                            copyToClipboard(url);
-                            alert("Copied to clipboard!")
-                        } catch(error) {
-                            console.error(error);
-                        }
-
+                        alert('Upload successful:\n' + "{{ instanceBackendURL }}" + url);
                     } else {
                         alert('Upload failed: ' + xhr.statusText);
                     }
