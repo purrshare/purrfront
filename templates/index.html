@@ -35,33 +35,64 @@ Copyright (C) 2025  PurrShare
                     data-svelte-h="svelte-qskh6z">Log in for the full experience</a></p></div>
     </div>
     <script>
-        document.getElementById('fileInput').addEventListener('change', function(event) {
+        // https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined
+        async function copyToClipboard(textToCopy) {
+            // Navigator clipboard api needs a secure context (https)
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(textToCopy);
+            } else {
+                // Use the 'out of viewport hidden text area' trick
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+
+                // Move textarea out of the viewport so it's not visible
+                textArea.style.position = "absolute";
+                textArea.style.left = "-999999px";
+
+                document.body.prepend(textArea);
+                textArea.select();
+
+                try {
+                    document.execCommand('copy');
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    textArea.remove();
+                }
+            }
+        }
+
+        document.getElementById('fileInput').addEventListener('change', async function (event) {
             const file = event.target.files[0];
-            var url;
             if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', '{{ instanceBackendURL }}' + file.name, true);
+                try {
+                    const response = await fetch('{{ instanceBackendURL }}' + file.name, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: formData,
+                        headers: {
+                            'Content-Type': 'application/octet-stream'
+                        }
+                    });
 
-                xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        url = "{{ instanceBackendURL }}" + xhr.responseText + "/n/" + file.name;
-                        navigator.clipboard.writeText(url);
-                        alert('Upload successful:\n' + "{{ instanceBackendURL }}" + url + "\nCopied to clipboard!");
+                    if (response.ok) {
+                        const responseData = await response.text();
+                        const url = "{{ instanceBackendURL }}" + responseData + "/n/" + file.name;
+                        try {
+                            await copyToClipboard(url);
+                        } catch (error) {
+                            console.error(error);
+                        }
+                        alert('Upload successful:\n' + url + "\nCopied to clipboard!");
                     } else {
-                        alert('Upload failed: ' + xhr.statusText);
+                        alert('Upload failed: ' + response.statusText);
                     }
-                };
-
-                xhr.onerror = function() {
+                } catch (error) {
                     alert('Upload failed: Network error');
-                };
-
-                xhr.send(file);
+                }
             } else {
                 alert('No file selected');
             }
