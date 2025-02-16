@@ -37,6 +37,7 @@ Copyright (C) 2025  PurrShare
             const file = event.target.files[0];
             var url;
             if (file) {
+                document.getElementById("url").innerText = 'Uploading...';
                 const formData = new FormData();
                 formData.append('file', file);
 
@@ -50,17 +51,17 @@ Copyright (C) 2025  PurrShare
                         url = "{{ instanceBackendURL }}" + xhr.responseText + "/n/" + file.name;
                         document.getElementById("url").innerText = 'Upload successful: ' + "{{ instanceBackendURL }}" + url;
                     } else {
-                        alert('Upload failed: ' + xhr.statusText);
+                        document.getElementById("url").innerText = 'Upload failed: ' + xhr.statusText;
                     }
                 };
 
                 xhr.onerror = function() {
-                    alert('Upload failed: Network error');
+                    document.getElementById("url").innerText = 'Upload failed: Network error';
                 };
 
                 xhr.send(file);
             } else {
-                alert('No file selected');
+                document.getElementById("url").innerText = 'No file selected';
             }
         });
     </script>
